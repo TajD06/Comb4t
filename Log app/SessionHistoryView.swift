@@ -20,13 +20,23 @@ struct FSCalendarView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> FSCalendar {
         let calendar = FSCalendar()
-        calendar.appearance.weekdayTextColor = .label
+        let accent = UIColor(named: "AccentColor") ?? .systemIndigo
+        calendar.backgroundColor = .clear
+        calendar.appearance.weekdayTextColor = .secondaryLabel
         calendar.appearance.titleDefaultColor = .label
+        calendar.appearance.titlePlaceholderColor = .tertiaryLabel
         calendar.appearance.titleSelectionColor = .white
         calendar.appearance.headerTitleColor = .label
+        calendar.appearance.headerTitleFont = .systemFont(ofSize: 17, weight: .semibold)
+        calendar.appearance.weekdayFont = .systemFont(ofSize: 12, weight: .semibold)
+        calendar.appearance.titleFont = .systemFont(ofSize: 15, weight: .regular)
+        calendar.appearance.headerMinimumDissolvedAlpha = 0
+        calendar.appearance.caseOptions = [.weekdayUsesUpperCase]
+        calendar.appearance.eventDefaultColor = accent
+        calendar.appearance.eventSelectionColor = accent
         calendar.delegate = context.coordinator
         calendar.dataSource = context.coordinator
-        calendar.appearance.selectionColor = .systemCyan
+        calendar.appearance.selectionColor = accent
         calendar.today = nil
         return calendar
     }

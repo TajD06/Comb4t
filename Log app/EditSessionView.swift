@@ -18,57 +18,79 @@ struct EditSessionView: View  {
     @Environment(\.modelContext) var context
     
     var body : some View {
-        Form {
-            Section {
-                DatePicker("Date", selection: $date)
-            }
-            
-            Section {
-                Picker("Discipline", selection: $discipline) {
-                    Text("Striking").tag(Discipline.striking)
-                    Text("Grappling").tag(Discipline.grappling)
-                    Text("MMA").tag(Discipline.MMA)
+        NavigationStack {
+            List {
+                Section {
+                    DisciplineSelector(selection: $discipline, compact: true)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                } header: {
+                    Text("Discipline")
                 }
-                
-                Picker("Duration", selection: $durationMins) {
-                    ForEach(Array(stride(from: 0, to: 305, by: 1)), id: \.self) { mins in
-                        Text("\(mins) mins").tag(mins)
+
+                Section("Duration") {
+                    DurationDial(minutes: $durationMins, colors: discipline.colors)
+                        .padding(.vertical, 12)
+                }
+                .listRowBackground(Rectangle().fill(.regularMaterial))
+
+                Section("When") {
+                    DatePicker(selection: $date) {
+                        Label("Date", systemImage: "calendar")
                     }
                 }
-                .pickerStyle(.wheel)
-                
-                TextField("Notes", text: $notes, axis: .vertical)
-                
-                Button("Save") {
-                    session.date = date
-                    session.discipline = discipline
-                    session.duration = durationMins
-                    session.notes = notes
-                    dismiss()
-                    
+                .listRowBackground(Rectangle().fill(.regularMaterial))
+
+                Section("Notes") {
+                    TextField("How did the session go?", text: $notes, axis: .vertical)
+                        .lineLimit(3...8)
                 }
-                
-            }
-            Section("Sparring Rounds") {
-                if session.sparringRounds.isEmpty {
-                    Text("No sparring logged")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(session.sparringRounds) { round in
-                        VStack(alignment: .leading) {
-                            Text("Rounds: \(round.rounds)")
-                            Text("\(round.minutesPerRound) min per round")
+                .listRowBackground(Rectangle().fill(.regularMaterial))
+
+                Section("Sparring Rounds") {
+                    if session.sparringRounds.isEmpty {
+                        Text("No sparring logged")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(session.sparringRounds) { round in
+                            SparringRoundRow(round: round)
                         }
-                    }
-                    .onDelete { indexSet in
-                        for index in indexSet {
-                            let round = session.sparringRounds[index]
-                            context.delete(round)
+                        .onDelete { indexSet in
+                            for index in indexSet {
+                                let round = session.sparringRounds[index]
+                                context.delete(round)
+                            }
                         }
                     }
                 }
+                .listRowBackground(Rectangle().fill(.regularMaterial))
+
             }
-            
+            .scrollContentBackground(.hidden)
+            .background {
+                AmbientBackground(colors: discipline.colors)
+                    .animation(.easeInOut(duration: 0.6), value: discipline)
+            }
+            .navigationTitle("Edit Session")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Save") {
+                        session.date = date
+                        session.discipline = discipline
+                        session.duration = durationMins
+                        session.notes = notes
+                        dismiss()
+
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
         }
         .onAppear {
             date = session.date
@@ -76,6 +98,6 @@ struct EditSessionView: View  {
             discipline = session.discipline
             notes = session.notes
         }
-        
+
     }
 }
